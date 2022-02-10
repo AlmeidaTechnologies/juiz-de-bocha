@@ -38,8 +38,8 @@ class Recognizer:
         im = im.convert('RGB')
         return np.array(im)
 
-    def predict_json(self, img: np.ndarray):
-        prediction: Instances = self.predict(img)
+    def predict_data(self, img: np.ndarray):
+        prediction: Instances = self.predict_instances(img)
         pred_boxes: Boxes = prediction.get('pred_boxes')
         centers = pred_boxes.get_centers().numpy()
         boxes = pred_boxes.tensor.numpy()
@@ -68,7 +68,7 @@ class Recognizer:
             })
         return instances
 
-    def predict(self, img: np.ndarray):
+    def predict_instances(self, img: np.ndarray):
         """
         Process an image and returns object instances
         :rtype: Instances
@@ -82,7 +82,7 @@ class Recognizer:
         return instances
 
     def predict_img(self, img):
-        instances = self.predict(img)
+        instances = self.predict_instances(img)
         visualizer = Visualizer(img)
         vis_output = visualizer.draw_instance_predictions(predictions=instances)
         return instances, vis_output

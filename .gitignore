@@ -7,3 +7,6 @@ test.json
 test.png
 
 gcf-function/detectron2/
+gcf-function/torch/
+gcf-function/torchvision/
+gcf-function/model/

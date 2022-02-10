@@ -4,12 +4,32 @@ from PIL import Image
 import numpy as np
 import io
 
+"""
+deploy:
+BUCKET="gs://juizdebocha.appspot.com"
+gcloud functions deploy hello_gcs \
+  --verbosity debug \
+  --project juizdebocha \
+  --region southamerica-east1 \
+  --runtime python39 \
+  --trigger-resource $BUCKET \
+  --trigger-event google.storage.object.finalize
+
+read logs:
+gcloud functions logs read --limit 50 --project juizdebocha
+gcloud functions logs read --limit 30 \
+  --project juizdebocha \
+  --region southamerica-east1 \
+  hello_gcs
+
+
+"""
 
 __project = 'juizdebocha'
 __bucket = "juizdebocha.appspot.com"
 
 
-def process_game_image(event: dict, context: Context):
+def hello_gcs(event: dict, context: Context):
 
     filepath: str = event['name']
 
@@ -43,6 +63,6 @@ def process_game_image(event: dict, context: Context):
 
 
 if __name__ == '__main__':
-    process_game_image({
+    hello_gcs({
         'name': "Screenshot from 2022-01-10 13-47-12.png",
     }, None)
