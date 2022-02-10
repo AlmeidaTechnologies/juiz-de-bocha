@@ -6,8 +6,8 @@ import io
 
 """
 deploy:
-BUCKET="gs://juizdebocha.appspot.com"
-gcloud functions deploy hello_gcs \
+BUCKET="gs://juizdebocha"
+gcloud functions deploy test_process_image \
   --verbosity debug \
   --project juizdebocha \
   --region southamerica-east1 \
@@ -20,16 +20,16 @@ gcloud functions logs read --limit 50 --project juizdebocha
 gcloud functions logs read --limit 30 \
   --project juizdebocha \
   --region southamerica-east1 \
-  hello_gcs
+  process_game_image
 
 
 """
 
 __project = 'juizdebocha'
-__bucket = "juizdebocha.appspot.com"
+__bucket = "juizdebocha"
 
 
-def hello_gcs(event: dict, context: Context):
+def test_process_image(event: dict, context: Context):
 
     filepath: str = event['name']
 
@@ -63,6 +63,6 @@ def hello_gcs(event: dict, context: Context):
 
 
 if __name__ == '__main__':
-    hello_gcs({
+    test_process_image({
         'name': "Screenshot from 2022-01-10 13-47-12.png",
     }, None)

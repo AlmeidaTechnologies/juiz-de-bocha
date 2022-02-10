@@ -1,8 +1,8 @@
 
 ###### deploy:
 ```bash
-BUCKET="gs://juizdebocha.appspot.com"
-gcloud functions deploy process_game_image \
+BUCKET="gs://juizdebocha"
+gcloud functions deploy test_process_image \
   --verbosity debug \
   --project juizdebocha \
   --region southamerica-east1 \
@@ -17,5 +17,5 @@ gcloud functions logs read --limit 50 --project juizdebocha
 gcloud functions logs read --limit 30 \
   --project juizdebocha \
   --region southamerica-east1 \
-  process_game_image
+  test_process_image
 ```

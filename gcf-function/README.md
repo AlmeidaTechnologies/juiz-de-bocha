@@ -31,7 +31,6 @@ gcloud functions deploy process_game_image \
   --verbosity debug \
   --project juizdebocha \
   --region southamerica-east1 \
-  --stage-bucket gs://juizdebocha-recognizer \
   --runtime python39 \
   --trigger-resource $BUCKET \
   --trigger-event google.storage.object.finalize
