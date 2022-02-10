@@ -5,3 +5,5 @@ __pycache__/
 venv/
 test.json
 test.png
+
+gcf-function/detectron2/
