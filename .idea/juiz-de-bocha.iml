@@ -5,6 +5,9 @@
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludeFolder url="file://$MODULE_DIR$/Jogos de bocha" />
       <excludeFolder url="file://$MODULE_DIR$/datasets" />
+      <excludeFolder url="file://$MODULE_DIR$/test-cloudrun/.dart_tool" />
+      <excludeFolder url="file://$MODULE_DIR$/test-cloudrun/.pub" />
+      <excludeFolder url="file://$MODULE_DIR$/test-cloudrun/build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

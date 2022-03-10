@@ -10,3 +10,6 @@ gcf-function/detectron2/
 gcf-function/torch/
 gcf-function/torchvision/
 gcf-function/model/
+
+cloud-run-function/recognizer.py
+cloud-run-function/model/
