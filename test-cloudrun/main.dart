@@ -6,8 +6,8 @@ import 'package:http/http.dart' as http;
 Future<Uint8List> processImage(Uint8List bytes) async {
   var request = await http.Request(
     'POST',
-    Uri.parse('http://localhost:8080'),
-    // Uri.parse('https://jsonplaceholder.typicode.com/albums/1')
+    // Uri.parse('http://localhost:8080'),
+    Uri.parse('https://recognizer-usnztkx52q-rj.a.run.app')
   );
   // request.headers.clear();
   request.headers.addAll({
