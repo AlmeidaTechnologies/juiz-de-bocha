@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<Uint8List> processImage(Uint8List bytes) async {
+Future<String> processImage(Uint8List bytes) async {
   var request = await http.Request(
     'POST',
     // Uri.parse('http://localhost:8080'),
@@ -15,12 +16,11 @@ Future<Uint8List> processImage(Uint8List bytes) async {
   });
   request.bodyBytes = bytes;
   var response = await request.send();
-  return response.stream.toBytes();
+  return await response.stream.bytesToString();
 }
 
 void main() async {
   File img = File('test.jpg');
-  var bytes = await processImage(await img.readAsBytes());
-  File res = File('result.jpg');
-  await res.writeAsBytes(bytes);
+  var url = await processImage(await img.readAsBytes());
+  print(url);
 }

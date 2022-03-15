@@ -30,11 +30,26 @@ gcloud run deploy recognizer \
   --project juizdebocha \
   --source .
 
-gcloud run deploy recognizer \
-  --region southamerica-east1 \
-  --project juizdebocha \
-  --image southamerica-east1-docker.pkg.dev/juizdebocha/cloud-run-source-deploy/recognizer:latest
+#or 
+
+#gcloud builds submit \
+#  --region southamerica-east1 \
+#  --project juizdebocha \
+#  --tag southamerica-east1-docker.pkg.dev/juizdebocha/cloud-run-source-deploy/recognizer \
+#  .
+#
+#gcloud run deploy recognizer \
+#  --region southamerica-east1 \
+#  --project juizdebocha \
+#  --image southamerica-east1-docker.pkg.dev/juizdebocha/cloud-run-source-deploy/recognizer:latest
 ````
+### Docker
+```bash
+# build
+docker build --tag test .
+# run
+docker run -e PORT=8080 --publish 8080:8080 test
+```
 
 ###### read logs:
 ```bash
@@ -44,4 +59,3 @@ gcloud functions logs read --limit 30 \
   --region southamerica-east1 \
   process_game_image
 ```
-
