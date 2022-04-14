@@ -19,8 +19,29 @@ Future<String> processImage(Uint8List bytes) async {
   return await response.stream.bytesToString();
 }
 
-void main() async {
-  File img = File('test.jpg');
-  var url = await processImage(await img.readAsBytes());
+void testSingle() async {
+  Fileimg = File('test.jpg');
+  String url = await processImage(await img.readAsBytes());
   print(url);
+}
+
+void testSeveral(List<String> args) async {
+  File img = File(args[0]);
+  var bytes = await img.readAsBytes();
+  var tests = [];
+  for (int i = 0; i < 1; i++) {
+    print("starting $i");
+    tests.add(processImage(bytes));
+    await Future.delayed(Duration(milliseconds: 500));
+  }
+  for (var test in tests){
+    print("awaiting");
+    var response = await test;
+    print("response: $response");
+  }
+}
+
+void main(List<String> args){
+  testSingle(args);
+  //testSeveral(args);
 }

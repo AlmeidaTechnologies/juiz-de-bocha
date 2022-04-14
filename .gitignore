@@ -5,6 +5,7 @@ __pycache__/
 venv/
 test.json
 test.png
+test-cloudrun/test*.jpg
 
 gcf-function/detectron2/
 gcf-function/torch/
