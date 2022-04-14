@@ -4,7 +4,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-Future<http.ByteStream> _processImageReturnImage(Uint8List bytes) async {
+Future<Uint8List> _processImageReturnImage(Uint8List bytes) async {
   http.Request request = http.Request(
     'POST',
     Uri.parse('https://recognizer-usnztkx52q-rj.a.run.app/image')
@@ -14,9 +14,8 @@ Future<http.ByteStream> _processImageReturnImage(Uint8List bytes) async {
   });
   request.bodyBytes = bytes;
   http.StreamedResponse response = await request.send();
-  return response.stream;
+  return await response.stream.toBytes();
 }
-
 
 Future<String> _processImageReturnURL(Uint8List bytes) async {
   http.Request request = http.Request(
@@ -32,15 +31,12 @@ Future<String> _processImageReturnURL(Uint8List bytes) async {
 }
 
 
-
 Future<String> processImageReturnURL(File img) async {
   return await processImage(await img.readAsBytes());
 }
 
 Future<File> processImageReturnImage(File foto, String pathResultado) async {
   File res = File(pathResultado);
-  IOSink writeStream = res.openWrite();
-  await writeStream.addStream(await _processImage(await foto.readAsBytes()));
-  await writeStream.close();
+  await res.writeAsBytes(await processImage(await img.readAsBytes()));
   return res;
 }

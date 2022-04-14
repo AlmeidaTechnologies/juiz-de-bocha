@@ -30,7 +30,7 @@ def _two_centers_distance(ca, cb):
 
 
 def _process_image(img_bytes):
-    img = rec.read_file(img_bytes)
+    img = rec.read_file(io.BytesIO(img_bytes))
     instances = rec.predict_data(img)
     instances = list(filter(lambda i: i['class'] == 'sports ball', instances))
     if len(instances) >= 2:
@@ -48,7 +48,7 @@ def _process_image(img_bytes):
             else:
                 color = [200, 100, 100]
             img[ball['mask']] = np.array(color, dtype=np.uint8)
-    return _to_bytes(img)
+    return img
 
 
 __counter = random.randint(1, 10000)
@@ -64,7 +64,7 @@ def _to_bytes(im):
     img = Image.fromarray(im)
     img_bytes = io.BytesIO()
     img.save(img_bytes, format='jpeg')
-    return io.BytesIO(img_bytes.getvalue())
+    return img_bytes.getvalue()
 
 
 def _upload_image(filepath, img_bytes, bucket, with_public_url=False):
@@ -75,7 +75,7 @@ def _upload_image(filepath, img_bytes, bucket, with_public_url=False):
         file.metadata = {
             'firebaseStorageDownloadTokens': token
         }
-    file.upload_from_file(img_bytes, content_type='image/jpeg')
+    file.upload_from_file(io.BytesIO(img_bytes), content_type='image/jpeg')
     if with_public_url:
         return f"https://firebasestorage.googleapis.com/v0/b/{__project}" \
                f"/o/{filepath}" \
@@ -85,14 +85,13 @@ def _upload_image(filepath, img_bytes, bucket, with_public_url=False):
 
 @app.route('/image', methods=['POST', 'GET'])
 def process_image_return_image():
-
     img_bytes = request.stream.read()
     filepath = _create_filepath()
     _upload_image(filepath, img_bytes, __raw_bucket)
-    img_bytes = _process_image(img_bytes)
+    result = _process_image(img_bytes)
 
     return send_file(
-        img_bytes,
+        io.BytesIO(_to_bytes(result)),
         download_name='response.jpeg',
         mimetype='image/jpeg',
         as_attachment=True,
@@ -101,12 +100,11 @@ def process_image_return_image():
 
 @app.route('/url', methods=['POST', 'GET'])
 def process_image_return_url():
-
     img_bytes = request.stream.read()
     filepath = _create_filepath()
     _upload_image(filepath, img_bytes, __raw_bucket)
-    img_bytes = _process_image(img_bytes)
-    url = _upload_image(filepath, img_bytes, __generated_bucket, with_public_url=True)
+    img = _process_image(img_bytes)
+    url = _upload_image(filepath, _to_bytes(img), __generated_bucket, with_public_url=True)
 
     return url
 
