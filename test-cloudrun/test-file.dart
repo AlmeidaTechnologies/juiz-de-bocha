@@ -7,8 +7,8 @@ import 'package:http/http.dart' as http;
 Future<http.ByteStream> processImage(Uint8List bytes) async {
   http.Request request = http.Request(
     'POST',
-    Uri.parse('http://localhost:8080'),
-    // Uri.parse('https://recognizer-usnztkx52q-rj.a.run.app')
+    // Uri.parse('http://localhost:8080/image'),
+    Uri.parse('https://recognizer-usnztkx52q-rj.a.run.app/image')
   );
   request.headers.addAll({
     'Keep-Alive': 'timeout=100, max=100',
