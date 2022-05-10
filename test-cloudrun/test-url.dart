@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:collection/collection.dart';
 
 Future<String> processImage(Uint8List bytes) async {
   http.Request request = http.Request(
@@ -18,13 +19,14 @@ Future<String> processImage(Uint8List bytes) async {
   return await response.stream.bytesToString();
 }
 
-void testSingle() async {
-  File img = File('test.jpg');
+void testSingle(String? filepath) async {
+  File img = File(filepath ?? 'test.jpg');
   String url = await processImage(await img.readAsBytes());
   print(url);
 }
 
 void testSeveral(List<String> args) async {
+  print(args[0]);
   File img = File(args[0]);
   var bytes = await img.readAsBytes();
   var tests = [];
@@ -41,6 +43,6 @@ void testSeveral(List<String> args) async {
 }
 
 void main(List<String> args){
-  testSingle();
+  testSingle(args.firstOrNull);
   //testSeveral(args);
 }
