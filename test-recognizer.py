@@ -8,7 +8,7 @@ rec = Recognizer(
 
 img = rec.read_file("datasets/Jogos de bocha/IMG-20220108-WA0016.jpg")
 
-data = rec.predict_json(img)
+data = rec.predict_data(img)
 print(data)
 rec.test(img)
 
