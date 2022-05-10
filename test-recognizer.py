@@ -1,5 +1,5 @@
 from recognizer import Recognizer
-import json
+# import json
 
 rec = Recognizer(
     config_file='models/mask_rcnn_X_101_32x8d_FPN_3x/mask_rcnn_X_101_32x8d_FPN_3x.yaml',
@@ -12,8 +12,8 @@ data = rec.predict_data(img)
 print(data)
 rec.test(img)
 
-with open('data.json', 'w', encoding='utf-8') as f:
-    json.dump(data, f, indent=4)
+# with open('data.json', 'w', encoding='utf-8') as f:
+#     json.dump(data, f, indent=4)
 
 # Mandar foto identificada com 3 bolas e sem pessoas identificadas.
 # Marcar número de cada
