@@ -15,6 +15,7 @@ app = Flask(__name__)
 rec = Recognizer(
     config_file='models/model/config.yaml',
     weights_file='models/model/weights.pkl',
+    confidence_threshold=0.1,
 )
 __project = 'juizdebocha'
 __storage_client = storage.Client(project=__project)
@@ -40,14 +41,15 @@ def _process_image(img_bytes):
         for i in range(len(balls)):
             balls[i]['distance'] = _two_centers_distance(smallest['center'], balls[i]['center'])
         balls.sort(key=lambda b: b['distance'])
-        for i, ball in enumerate([smallest, *balls]):
+        balls = [smallest, *balls]
+        for i in reversed(range(len(balls))):
             if i == 0:
                 color = [255, 255, 255]
             elif i == 1:
                 color = [100, 200, 100]
             else:
                 color = [200, 100, 100]
-            img[ball['mask']] = np.array(color, dtype=np.uint8)
+            img[balls[i].get('mask')] = np.array(color, dtype=np.uint8)
     return img
 
 
