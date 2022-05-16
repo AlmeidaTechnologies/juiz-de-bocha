@@ -122,8 +122,8 @@ def _upload_image(filepath, img_bytes, bucket, with_public_url=False):
 @app.route('/image', methods=['POST', 'GET'])
 def process_image_return_image():
     img_bytes = request.stream.read()
-    # filepath = _create_filepath()
-    # _upload_image(filepath, img_bytes, __raw_bucket)
+    filepath = _create_filepath()
+    _upload_image(filepath, img_bytes, __raw_bucket)
     result = _process_image(img_bytes)
 
     return send_file(
