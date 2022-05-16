@@ -1,9 +1,9 @@
 import os
 import random
-
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file
 from PIL import Image
 import numpy as np
+from scipy import ndimage
 import math
 import io
 from datetime import datetime
@@ -30,6 +30,16 @@ def _two_centers_distance(ca, cb):
     )
 
 
+def gaussian_kernel(l=5, sig=1.):
+    """\
+    creates gaussian kernel with side length `l` and a sigma of `sig`
+    """
+    ax = np.linspace(-(l - 1) / 2., (l - 1) / 2., l)
+    gauss = np.exp(-0.5 * np.square(ax) / np.square(sig))
+    kernel = np.outer(gauss, gauss)
+    return kernel / np.sum(kernel)
+
+
 def _process_image(img_bytes):
     img = rec.read_file(io.BytesIO(img_bytes))
     instances = rec.predict_data(img)
@@ -41,15 +51,39 @@ def _process_image(img_bytes):
         for i in range(len(balls)):
             balls[i]['distance'] = _two_centers_distance(smallest['center'], balls[i]['center'])
         balls.sort(key=lambda b: b['distance'])
-        balls = [smallest, *balls]
+        # grid
+        if smallest:
+            width = int(smallest['box']['x2'] - smallest['box']['x1']) +1
+            height = int(smallest['box']['y2'] - smallest['box']['y1']) +1
+            grid_color = np.array([80, 80, 80], dtype=np.uint8)
+            for direction in [-1, 1]:
+                x = int(smallest['box']['x1'])
+                while 0 < x < img.shape[1]:
+                    img[:, x-1:x] = grid_color
+                    x += direction * width
+                y = int(smallest['box']['y1'])
+                while 0 < y < img.shape[0]:
+                    img[y-1:y, :] = grid_color
+                    y += direction * height
+                # y = int(smallest['box']['y1'])
+            # i, j = 0, 0
+        # smaller
+        if smallest:
+            img[smallest.get('mask')] = np.array([255, 255, 255], dtype=np.uint8)
+        # balls border
         for i in reversed(range(len(balls))):
-            if i == 0:
-                color = [255, 255, 255]
-            elif i == 1:
-                color = [100, 200, 100]
-            else:
-                color = [200, 100, 100]
-            img[balls[i].get('mask')] = np.array(color, dtype=np.uint8)
+            colors = img[balls[i].get('mask')]
+            avg_color = colors.mean(axis=0)
+            img[balls[i].get('mask')] = np.array(avg_color, dtype=np.uint8)
+        # winner
+        winner = balls[0]
+        if winner:
+            border = winner.get('mask')
+            dilated = ndimage.binary_dilation(border, gaussian_kernel(10))
+            eroded = ndimage.binary_erosion(border, gaussian_kernel(5))
+            border = dilated ^ eroded
+            border = ndimage.binary_dilation(border, gaussian_kernel(5, 0.5))
+            img[border] = np.array([100, 220, 100], dtype=np.uint8)
     return img
 
 
@@ -88,8 +122,8 @@ def _upload_image(filepath, img_bytes, bucket, with_public_url=False):
 @app.route('/image', methods=['POST', 'GET'])
 def process_image_return_image():
     img_bytes = request.stream.read()
-    filepath = _create_filepath()
-    _upload_image(filepath, img_bytes, __raw_bucket)
+    # filepath = _create_filepath()
+    # _upload_image(filepath, img_bytes, __raw_bucket)
     result = _process_image(img_bytes)
 
     return send_file(
