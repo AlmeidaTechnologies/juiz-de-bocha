@@ -1,4 +1,7 @@
-models/
+
+models/**/*.pkl
+
+datasets
 datasets/
 __pycache__/
 **/__pycache__/
@@ -14,4 +17,4 @@ gcf-function/torchvision/
 gcf-function/model/
 
 cloud-run-function/recognizer.py
-cloud-run-function/model/
+cloud-run-function/models/
