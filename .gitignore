@@ -10,6 +10,8 @@ test.json
 test.png
 test-cloudrun/result*.jpg
 test-cloudrun/test*.jpg
+*.gif
+**/*.gif
 
 gcf-function/detectron2/
 gcf-function/torch/

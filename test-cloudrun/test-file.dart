@@ -20,7 +20,7 @@ Future<Uint8List> processImage(Uint8List bytes) async {
 
 Future<File> testSingle() async {
   File img = File('test.jpg');
-  File res = File('result.jpg');
+  File res = File('result.gif');
   await res.writeAsBytes(await processImage(await img.readAsBytes()));
   return res;
 }
