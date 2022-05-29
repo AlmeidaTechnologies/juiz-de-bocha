@@ -80,7 +80,7 @@ def _process_image(img_bytes):
         winner = balls[0]
         img_winner = img.copy()
         if winner:
-            img[winner.get('mask')] = np.array([100, 220, 100], dtype=np.uint8)
+            img[winner.get('mask')] = np.array([50, 230, 50], dtype=np.uint8)
             # border = winner.get('mask')
             # dilated = ndimage.binary_dilation(border, gaussian_kernel(10))
             # eroded = ndimage.binary_erosion(border, gaussian_kernel(5))
@@ -101,14 +101,23 @@ def _create_filename():
 
 def _to_gif_bytes(images):
     gif_bytes = io.BytesIO()
-    frames = [Image.fromarray(img) for img in images]
+    # fade in
+    base, winner = images
+    frames = []
+    p = 0.0
+    for step in [0.1, -0.1]:
+        for i in range(10):
+            frame = np.array(base * (1-p) + winner * p, dtype=np.uint8)
+            frame = Image.fromarray(frame)
+            frames.append(frame)
+            p += step
     frames[0].save(
         gif_bytes,
         format='gif',
         append_images=frames[1:],
         save_all=True,
-        duration=800,
-        optimize=False,
+        duration=50,
+        optimize=True,
         loop=0,
     )
     return gif_bytes.getvalue()
@@ -121,13 +130,14 @@ def _to_bytes(im, format='jpeg'):
     return img_bytes.getvalue()
 
 
-def _upload_image(filepath, img_bytes, bucket, with_public_url=False):
+def _upload_image(filepath, img_bytes, bucket, metadata, with_public_url=False):
     file = bucket.blob(filepath)
     token = None
     if with_public_url:
         token = uuid4()
         file.metadata = {
-            'firebaseStorageDownloadTokens': token
+            'firebaseStorageDownloadTokens': token,
+            **metadata,
         }
     if not isinstance(img_bytes, io.BytesIO):
         img_bytes = io.BytesIO(img_bytes)
@@ -143,7 +153,12 @@ def _upload_image(filepath, img_bytes, bucket, with_public_url=False):
 def process_image_return_image():
     img_bytes = request.stream.read()
     filename = _create_filename()
-    _upload_image(filename + '.jpg', img_bytes, __raw_bucket)
+    _upload_image(
+        filename + '.jpg',
+        img_bytes,
+        __raw_bucket,
+        metadata=request.args,
+    )
     result = _process_image(img_bytes)
     result_bytes = _to_gif_bytes(result)
 
@@ -159,9 +174,20 @@ def process_image_return_image():
 def process_image_return_url():
     img_bytes = request.stream.read()
     filename = _create_filename()
-    _upload_image(filename + '.jpg', img_bytes, __raw_bucket)
+    _upload_image(
+        filename + '.jpg',
+        img_bytes,
+        __raw_bucket,
+        metadata=request.args,
+    )
     img = _process_image(img_bytes)
-    url = _upload_image(filename + '.gif', _to_gif_bytes(img), __generated_bucket, with_public_url=True)
+    url = _upload_image(
+        filename + '.gif',
+        _to_gif_bytes(img),
+        __generated_bucket,
+        metadata=request.args,
+        with_public_url=True
+    )
 
     return url
 
