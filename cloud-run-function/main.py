@@ -19,7 +19,7 @@ rec = Recognizer(
 __project = 'juizdebocha'
 __storage_client = storage.Client(project=__project)
 __raw_bucket: storage.Bucket = __storage_client.bucket('juizdebocha-raw')
-__generated_bucket: storage.Bucket = __storage_client.bucket('juizdebocha')
+__generated_bucket: storage.Bucket = __storage_client.bucket('juizdebocha.appspot.com')
 
 __upload_raw = True
 
@@ -133,7 +133,9 @@ def _to_bytes(im, format='jpeg'):
 
 def _upload_image(filepath, img_bytes, bucket, metadata, with_public_url=False):
     if 'userID' in metadata:
-        filepath = metadata.get('userID') + '/' + filepath
+        filepath = f"users/{metadata['userID']}/uploads/{filepath}"
+    else:
+        filepath = f"tests/{filepath}"
     file = bucket.blob(filepath)
     token = None
     if with_public_url:
