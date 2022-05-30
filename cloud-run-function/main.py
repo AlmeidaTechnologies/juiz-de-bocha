@@ -106,8 +106,8 @@ def _to_gif_bytes(images):
     base, winner = images
     frames = []
     p = 0.0
-    for step in [0.1, -0.1]:
-        for i in range(10):
+    for step in [0.15, -0.15]:
+        for i in range(int(math.fabs(1.0//step))):
             frame = np.array(base * (1-p) + winner * p, dtype=np.uint8)
             frame = Image.fromarray(frame)
             frames.append(frame)
