@@ -75,15 +75,15 @@ Future<File> processImageReturnImage(
 ////////// Exemplos de uso //////////
 void main(List<String> args){
   File img = File(args.isEmpty ? 'test.jpg' : args[0]);
-  // processImageReturnImage(
-  //   img,
-  //   "result1.gif",
-  //   userID: "1",
-  //   accelerometer: 2.9,
-  // );
-  processImageReturnURL(
+  processImageReturnImage(
     img,
+    "result.gif",
     userID: "1",
     accelerometer: 2.9,
   );
+  // processImageReturnURL(
+  //   img,
+  //   userID: "1",
+  //   accelerometer: 2.9,
+  // );
 }
