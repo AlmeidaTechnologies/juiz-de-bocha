@@ -13,7 +13,8 @@ from uuid import uuid4
 app = Flask(__name__)
 rec = Recognizer(
     config_file='models/model/config.yaml',
-    weights_file='models/model/weights.pkl',
+    # weights_file='models/model/weights.pkl',
+    weights_file='models/model/model_final.pth',
     confidence_threshold=0.1,
 )
 __project = 'juizdebocha'
@@ -110,6 +111,10 @@ def _to_gif_bytes(images):
         for i in range(int(math.fabs(1.0//step))):
             frame = np.array(base * (1-p) + winner * p, dtype=np.uint8)
             frame = Image.fromarray(frame)
+            frame = frame.resize((
+                int(frame.size[0] * 0.4),
+                int(frame.size[1] * 0.4),
+            ))
             frames.append(frame)
             p += step
     frames[0].save(
@@ -120,6 +125,8 @@ def _to_gif_bytes(images):
         duration=50,
         optimize=True,
         loop=0,
+        minimize_size=True,
+        allow_mixed=True,
     )
     return gif_bytes.getvalue()
 
