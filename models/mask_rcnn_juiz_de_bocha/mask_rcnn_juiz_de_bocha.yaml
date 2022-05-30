@@ -13,6 +13,8 @@ MODEL:
   ROI_MASK_HEAD:
     POOLER_SAMPLING_RATIO: 2
     POOLER_TYPE: "ROIAlign"
+  ROI_HEADS:
+    NUM_CLASSES: 1
 DATASETS:
   TRAIN: ("juiz_de_bocha_train",)
   TEST: ("juiz_de_bocha_val",)
