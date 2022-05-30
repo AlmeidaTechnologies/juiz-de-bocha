@@ -3,7 +3,6 @@ import random
 from flask import Flask, request, send_file
 from PIL import Image
 import numpy as np
-from scipy import ndimage
 import math
 import io
 from datetime import datetime
@@ -21,6 +20,8 @@ __project = 'juizdebocha'
 __storage_client = storage.Client(project=__project)
 __raw_bucket: storage.Bucket = __storage_client.bucket('juizdebocha-raw')
 __generated_bucket: storage.Bucket = __storage_client.bucket('juizdebocha')
+
+__upload_raw = True
 
 
 def _two_centers_distance(ca, cb):
@@ -131,6 +132,8 @@ def _to_bytes(im, format='jpeg'):
 
 
 def _upload_image(filepath, img_bytes, bucket, metadata, with_public_url=False):
+    if 'userID' in metadata:
+        filepath = metadata.get('userID') + '/' + filepath
     file = bucket.blob(filepath)
     token = None
     if with_public_url:
@@ -153,12 +156,13 @@ def _upload_image(filepath, img_bytes, bucket, metadata, with_public_url=False):
 def process_image_return_image():
     img_bytes = request.stream.read()
     filename = _create_filename()
-    _upload_image(
-        filename + '.jpg',
-        img_bytes,
-        __raw_bucket,
-        metadata=request.args,
-    )
+    if __upload_raw:
+        _upload_image(
+            filename + '.jpg',
+            img_bytes,
+            __raw_bucket,
+            metadata=request.args,
+        )
     result = _process_image(img_bytes)
     result_bytes = _to_gif_bytes(result)
 
@@ -174,12 +178,13 @@ def process_image_return_image():
 def process_image_return_url():
     img_bytes = request.stream.read()
     filename = _create_filename()
-    _upload_image(
-        filename + '.jpg',
-        img_bytes,
-        __raw_bucket,
-        metadata=request.args,
-    )
+    if __upload_raw:
+        _upload_image(
+            filename + '.jpg',
+            img_bytes,
+            __raw_bucket,
+            metadata=request.args,
+        )
     img = _process_image(img_bytes)
     url = _upload_image(
         filename + '.gif',
@@ -193,4 +198,5 @@ def process_image_return_url():
 
 
 if __name__ == "__main__":
+    __upload_raw = False
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
