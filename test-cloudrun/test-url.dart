@@ -5,12 +5,30 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:collection/collection.dart';
 
-Future<String> processImage(Uint8List bytes) async {
-  http.Request request = http.Request(
-    'POST',
-    Uri.parse('http://localhost:8080/url'),
-    // Uri.parse('https://recognizer-usnztkx52q-rj.a.run.app/url')
-  );
+// Camera data: https://pub.dev/documentation/camera/latest/camera/CameraImage-class.html
+
+Future<String> processImage(
+    Uint8List bytes,
+    {
+      String? userID,
+      double? accelerometer,
+      double? gyroscope,
+      double? lensAperture,
+      double? sensorSensitivity,
+      int? sensorExposureTime,
+    }
+) async {
+  Uri uri = Uri.parse('http://localhost:8080/url');
+  // Uri uri = Uri.parse('https://recognizer-usnztkx52q-rj.a.run.app/url');
+  uri = uri.replace(queryParameters: {
+    'userID': userID,
+    'accelerometer': accelerometer,
+    'gyroscope': gyroscope,
+    'lensAperture': lensAperture,
+    'sensorSensitivity': sensorSensitivity,
+    'sensorExposureTime': sensorExposureTime,
+  });
+  http.Request request = http.Request('POST', uri);
   request.headers.addAll({
     'Keep-Alive': 'timeout=100, max=100',
   });
@@ -19,7 +37,17 @@ Future<String> processImage(Uint8List bytes) async {
   return await response.stream.bytesToString();
 }
 
-void testSingle(String? filepath) async {
+void testSingle(
+    String? filepath,
+    {
+      String? user_id,
+      double? accelerometer,
+      double? gyroscope,
+      double? lensAperture,
+      double? sensorSensitivity,
+      int? sensorExposureTime,
+    }
+) async {
   File img = File(filepath ?? 'test.jpg');
   String url = await processImage(await img.readAsBytes());
   print(url);
