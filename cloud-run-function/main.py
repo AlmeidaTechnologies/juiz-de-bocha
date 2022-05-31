@@ -9,6 +9,7 @@ from datetime import datetime
 from google.cloud import storage
 from recognizer import Recognizer
 from uuid import uuid4
+import urllib.parse
 
 app = Flask(__name__)
 rec = Recognizer(
@@ -138,7 +139,7 @@ def _to_bytes(im, format='jpeg'):
     return img_bytes.getvalue()
 
 
-def _upload_image(filepath, img_bytes, bucket, metadata, with_public_url=False):
+def _upload_image(filepath, img_bytes, img_type, bucket, metadata, with_public_url=False):
     if 'userID' in metadata:
         filepath = f"users/{metadata['userID']}/uploads/{filepath}"
     else:
@@ -153,9 +154,10 @@ def _upload_image(filepath, img_bytes, bucket, metadata, with_public_url=False):
         }
     if not isinstance(img_bytes, io.BytesIO):
         img_bytes = io.BytesIO(img_bytes)
-    file.upload_from_file(img_bytes, content_type='image/jpeg')
+    file.upload_from_file(img_bytes, content_type=f'image/{img_type}')
     if with_public_url:
-        return f"https://firebasestorage.googleapis.com/v0/b/{__project}" \
+        filepath = urllib.parse.quote(filepath, safe='')
+        return f"https://firebasestorage.googleapis.com/v0/b/{__generated_bucket.name}" \
                f"/o/{filepath}" \
                f"?alt=media" \
                f"&token={token}"
@@ -169,6 +171,7 @@ def process_image_return_image():
         _upload_image(
             filename + '.jpg',
             img_bytes,
+            'jpeg',
             __raw_bucket,
             metadata=request.args,
         )
@@ -191,6 +194,7 @@ def process_image_return_url():
         _upload_image(
             filename + '.jpg',
             img_bytes,
+            'jpeg',
             __raw_bucket,
             metadata=request.args,
         )
@@ -198,6 +202,7 @@ def process_image_return_url():
     url = _upload_image(
         filename + '.gif',
         _to_gif_bytes(img),
+        'gif',
         __generated_bucket,
         metadata=request.args,
         with_public_url=True
