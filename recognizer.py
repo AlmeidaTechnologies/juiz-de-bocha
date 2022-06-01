@@ -1,8 +1,8 @@
-import sys
 import cv2
 import numpy as np
 import torch
 from PIL import Image
+import exifread
 from detectron2.config import get_cfg
 from detectron2.data import MetadataCatalog
 from detectron2.structures import Instances, Boxes
@@ -30,13 +30,43 @@ class Recognizer:
         self._metadata = MetadataCatalog.get(
             cfg.DATASETS.TEST[0] if len(cfg.DATASETS.TEST) else "__unused"
         )
-        self._class_names = self._metadata.get("thing_classes")
+        self._class_names = self._metadata.get("thing_classes") or ['sports ball']
+
+    @staticmethod
+    def __read_img_and_correct_exif_orientation(file) -> Image:
+        """
+        Copiado de https://pypi.org/project/ExifRead/
+        :param file
+        :return: Image
+        """
+        im = Image.open(file)
+        with open(file, 'rb') as f:
+            tags = exifread.process_file(f, details=False)
+        if "Image Orientation" in tags.keys():
+            orientation = tags["Image Orientation"]
+            val = orientation.values
+            if 2 in val:
+                val += [4, 3]
+            if 5 in val:
+                val += [4, 6]
+            if 7 in val:
+                val += [4, 8]
+            if 3 in val:
+                im = im.transpose(Image.ROTATE_180)
+            if 4 in val:
+                im = im.transpose(Image.FLIP_TOP_BOTTOM)
+            if 6 in val:
+                im = im.transpose(Image.ROTATE_270)
+            if 8 in val:
+                im = im.transpose(Image.ROTATE_90)
+        return im
 
     @staticmethod
     def read_file(file):
-        im = Image.open(file)
+        im = Recognizer.__read_img_and_correct_exif_orientation(file)
         im = im.convert('RGB')
-        return np.array(im)
+        im = np.array(im)
+        return im
 
     def predict_data(self, img: np.ndarray):
         prediction: Instances = self.predict_instances(img)
