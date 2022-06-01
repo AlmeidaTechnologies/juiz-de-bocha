@@ -72,20 +72,51 @@ Future<File> processImageReturnImage(
   return res;
 }
 
+Future<Map<String, dynamic>> processImageReturnCoordinates(
+    File img,
+    {
+      String? userID,
+      double? accelerometer,
+      double? gyroscope,
+      double? lensAperture,
+      double? sensorSensitivity,
+      int? sensorExposureTime,
+    }
+) async {
+  return jsonDecode(await (await __processImage(
+    __prepareUri('/coordinates', {
+      'userID': userID,
+      'accelerometer': accelerometer.toString(),
+      'gyroscope': gyroscope.toString(),
+      'lensAperture': lensAperture.toString(),
+      'sensorSensitivity': sensorSensitivity.toString(),
+      'sensorExposureTime': sensorExposureTime.toString(),
+    }),
+    await img.readAsBytes()
+  )).bytesToString());
+}
+
 ////////// Exemplos de uso //////////
 void main(List<String> args){
   File img = File(args.isEmpty ? 'test.jpg' : args[0]);
-  processImageReturnImage(
+  // processImageReturnImage(
+  //   img,
+  //   "result.gif",
+  //   userID: "1",
+  //   accelerometer: 2.9,
+  // );
+  processImageReturnURL(
     img,
-    "result.gif",
     userID: "1",
     accelerometer: 2.9,
-  );
-  // processImageReturnURL(
+  ).then((String url){
+    print(url);
+  });
+  // processImageReturnCoordinates(
   //   img,
   //   userID: "1",
   //   accelerometer: 2.9,
-  // ).then((String url){
-  //   print(url);
+  // ).then((Map<String, dynamic> json){
+  //   print(json);
   // });
 }
