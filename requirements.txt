@@ -1,3 +1,4 @@
+scikit_image==0.19.2
 ExifRead==3.0.0
 absl-py==1.0.0
 antlr4-python3-runtime==4.8

@@ -10,6 +10,7 @@ from google.cloud import storage
 from recognizer import Recognizer
 from uuid import uuid4
 import urllib.parse
+import skimage.draw
 
 app = Flask(__name__)
 rec = Recognizer(
@@ -61,6 +62,7 @@ def __process_balls(img):
         winner = balls[0]
     return balls, winner, smallest
 
+
 def _process_image(img_bytes):
     img = __read_image(img_bytes)
     balls, winner, smallest = __process_balls(img)
@@ -91,6 +93,31 @@ def _process_image(img_bytes):
         img[ball.get('mask')] = avg_color
         if i != 0:
             img_winner[ball.get('mask')] = avg_color
+
+    if winner:
+        c = int(winner['center']['x'])
+        r = int(winner['center']['y'])
+        c_radius = int(winner['box']['x2']-winner['box']['x1'])
+        r_radius = int(winner['box']['y2']-winner['box']['y1'])
+        shape = img.shape
+        # outer
+        margin = 8
+        rr, cc = skimage.draw.ellipse(
+            r, c,
+            r_radius-margin,
+            c_radius-margin,
+            shape=shape
+        )
+        img_winner[rr, cc] = np.array([50, 230, 50], dtype=np.uint8)
+        # inner
+        stroke = 2
+        rr, cc = skimage.draw.ellipse(
+            r, c,
+            r_radius-margin-stroke,
+            c_radius-margin-stroke,
+            shape=shape
+        )
+        img_winner[rr, cc] = img[rr, cc]
 
     # circulo na cor média da bola e piscando em verde
     # for i in reversed(range(len(balls))):
@@ -138,7 +165,7 @@ def _to_gif_bytes(images):
             max_shape[1],  # x
             int(base.shape[0] * factor),  # y
         )
-    for step in [0.35, -0.35]:
+    for step in [0.25, -0.25]:
         for i in range(int(math.fabs(1.0//step))):
             frame = np.array(base * (1-p) + winner * p, dtype=np.uint8)
             frame = Image.fromarray(frame)
