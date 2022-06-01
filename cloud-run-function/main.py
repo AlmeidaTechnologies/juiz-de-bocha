@@ -74,16 +74,24 @@ def _process_image(img_bytes):
         # smaller
         if smallest:
             img[smallest.get('mask')] = np.array([255, 255, 255], dtype=np.uint8)
-        # balls border
-        for i in reversed(range(len(balls))):
-            colors = img[balls[i].get('mask')]
-            avg_color = colors.mean(axis=0)
-            img[balls[i].get('mask')] = np.array(avg_color, dtype=np.uint8)
-        # winner
-        winner = balls[0]
+        # balls filling
         img_winner = img.copy()
-        if winner:
-            img[winner.get('mask')] = np.array([50, 230, 50], dtype=np.uint8)
+        for i, ball in reversed(list(enumerate(balls))):
+            colors = img[ball.get('mask')]
+            avg_color = np.array(colors.mean(axis=0), dtype=np.uint8)
+            img[ball.get('mask')] = avg_color
+            if i != 0:
+                img_winner[ball.get('mask')] = avg_color
+
+        # circulo na cor média da bola e piscando em verde
+        # for i in reversed(range(len(balls))):
+        #     colors = img[balls[i].get('mask')]
+        #     avg_color = colors.mean(axis=0)
+        #     img[balls[i].get('mask')] = np.array(avg_color, dtype=np.uint8)
+        # winner
+        # winner = balls[0]
+        # if winner:
+        #     img[winner.get('mask')] = np.array([50, 230, 50], dtype=np.uint8)
             # border = winner.get('mask')
             # dilated = ndimage.binary_dilation(border, gaussian_kernel(10))
             # eroded = ndimage.binary_erosion(border, gaussian_kernel(5))
@@ -102,20 +110,33 @@ def _create_filename():
     return f"{datetime.now().timestamp()}.{__counter}"
 
 
+max_shape = (1080, 900)
+
+
 def _to_gif_bytes(images):
     gif_bytes = io.BytesIO()
-    # fade in
     base, winner = images
     frames = []
     p = 0.0
-    for step in [0.15, -0.15]:
+    new_size = None
+    if base.shape[0] > base.shape[1] and base.shape[0] > max_shape[0]:  # portrait
+        factor = max_shape[0] / base.shape[0]
+        new_size = (
+            int(base.shape[1] * factor),  # x
+            max_shape[0],  # y
+        )
+    elif base.shape[1] > max_shape[1]:  # landscape
+        factor = max_shape[1] / base.shape[1]
+        new_size = (
+            max_shape[1],  # x
+            int(base.shape[0] * factor),  # y
+        )
+    for step in [0.35, -0.35]:
         for i in range(int(math.fabs(1.0//step))):
             frame = np.array(base * (1-p) + winner * p, dtype=np.uint8)
             frame = Image.fromarray(frame)
-            frame = frame.resize((
-                int(frame.size[0] * 0.4),
-                int(frame.size[1] * 0.4),
-            ))
+            if new_size is not None:
+                frame = frame.resize(new_size)
             frames.append(frame)
             p += step
     frames[0].save(
@@ -123,7 +144,7 @@ def _to_gif_bytes(images):
         format='gif',
         append_images=frames[1:],
         save_all=True,
-        duration=50,
+        duration=100,
         optimize=True,
         loop=0,
         minimize_size=True,
