@@ -110,7 +110,7 @@ def _process_image(img_bytes):
         )
         img_winner[rr, cc] = np.array([50, 230, 50], dtype=np.uint8)
         # inner
-        stroke = 2
+        stroke = 14
         rr, cc = skimage.draw.ellipse(
             r, c,
             r_radius-margin-stroke,
