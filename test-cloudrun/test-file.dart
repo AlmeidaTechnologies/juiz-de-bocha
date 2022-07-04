@@ -18,8 +18,8 @@ Future<Uint8List> processImage(Uint8List bytes) async {
   return await response.stream.toBytes();
 }
 
-Future<File> testSingle() async {
-  File img = File('test.jpg');
+Future<File> testSingle(String? input) async {
+  File img = File(input ?? 'test.jpg');
   File res = File('result.gif');
   await res.writeAsBytes(await processImage(await img.readAsBytes()));
   return res;
@@ -42,6 +42,6 @@ void testSeveral(List<String> args) async {
 }
 
 void main(List<String> args){
-  testSingle();
+  testSingle(args.first);
   //testSeveral(args);
 }
