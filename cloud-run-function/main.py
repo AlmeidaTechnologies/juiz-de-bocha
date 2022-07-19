@@ -145,7 +145,7 @@ def _create_filename():
     return f"{datetime.now().timestamp()}.{__counter}"
 
 
-max_shape = (1000, 900)
+max_shape = (10000, 9000)
 
 
 def _to_gif_bytes(images):
