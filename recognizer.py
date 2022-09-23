@@ -1,3 +1,5 @@
+import io
+
 import cv2
 import numpy as np
 import torch
@@ -40,8 +42,11 @@ class Recognizer:
         :return: Image
         """
         im = Image.open(file)
-        with open(file, 'rb') as f:
-            tags = exifread.process_file(f, details=False)
+        if isinstance(file, io.BytesIO):
+            tags = exifread.process_file(file, details=False)
+        else:
+            with open(file, 'rb') as f:
+                tags = exifread.process_file(f, details=False)
         if "Image Orientation" in tags.keys():
             orientation = tags["Image Orientation"]
             val = orientation.values

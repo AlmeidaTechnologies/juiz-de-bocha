@@ -13,7 +13,7 @@ import urllib.parse
 import skimage.draw
 
 app = Flask(__name__)
-rec = Recognizer(
+_rec = Recognizer(
     config_file='models/model/config.yaml',
     # weights_file='models/model/weights.pkl',
     weights_file='models/model/model_final.pth',
@@ -46,11 +46,11 @@ def gaussian_kernel(l=5, sig=1.):
 
 
 def __read_image(img_bytes):
-    return rec.read_file(io.BytesIO(img_bytes))
+    return _rec.read_file(io.BytesIO(img_bytes))
 
 
 def __process_balls(img):
-    instances = rec.predict_data(img)
+    instances = _rec.predict_data(img)
     instances = list(filter(lambda i: i['class'] == 'sports ball', instances))
     balls, smallest, winner = [], None, None
     if len(instances) >= 2:
