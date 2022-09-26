@@ -13,9 +13,10 @@ from skimage import measure
 rec = Recognizer(
     config_file='cloud-run-function/models/model/config.yaml',
     # weights_file='models/model/weights.pkl',
-    weights_file='cloud-run-function/models/model/model_final.pth',
+    weights_file='models/mask_rcnn_juiz_de_bocha_custom/weights_first_train.pth',
     # confidence_threshold=0.9,
     confidence_threshold=0.7,
+    gpu_id=0,
 )
 
 base_dir = './datasets/juizdebocha-raw/dataset'

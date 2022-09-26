@@ -150,8 +150,35 @@ def _process_image(img_bytes):
 
     # smaller
     if smallest:
-        margin = 8
-        stroke = max(img.shape[0], img.shape[1]) * 0.0025
+        margin = 0
+        stroke = max(img.shape[0], img.shape[1]) * 0.0022
+        # vertical line
+        rr, cc = skimage.draw.rectangle(
+            start=(
+                max(int(smallest['box']['y1']-3+margin-stroke), 0),
+                max(int(smallest['center']['x']-stroke/2), 0),
+            ),
+            end=(
+                min(int(smallest['box']['y2']+3-margin+stroke), img.shape[0]-1),
+                min(int(smallest['center']['x']+stroke/2), img.shape[1]-1),
+            ),
+        )
+        img[rr, cc] = green
+        img_winner[rr, cc] = green
+        # horizontal line
+        rr, cc = skimage.draw.rectangle(
+            start=(
+                max(int(smallest['center']['y']-stroke/2.), 0),
+                max(int(smallest['box']['x1']-3+margin-stroke), 0),
+            ),
+            end=(
+                min(int(smallest['center']['y']+stroke/2.), img.shape[0]-1),
+                min(int(smallest['box']['x2']+3-margin+stroke), img.shape[1]-1),
+            ),
+        )
+        img[rr, cc] = green
+        img_winner[rr, cc] = green
+        # circle
         __draw_circle(
             img,
             img_winner,
@@ -168,22 +195,7 @@ def _process_image(img_bytes):
             margin=margin,
             stroke=stroke,
         )
-        # vertical line
-        rr, cc = skimage.draw.rectangle(
-            start=(int(smallest['box']['y1']-1-margin), int(smallest['center']['x']-stroke/2.)),
-            end=(int(smallest['box']['y2']+1+margin), int(smallest['center']['x']+stroke/2.)),
-        )
-        img[rr, cc] = green
-        img_winner[rr, cc] = green
-        # horizontal line
-        rr, cc = skimage.draw.rectangle(
-            start=(int(smallest['center']['y']-stroke/2.), int(smallest['box']['x1']-1-margin)),
-            end=(int(smallest['center']['y']+stroke/2.), int(smallest['box']['x2']+1+margin)),
-        )
-        img[rr, cc] = green
-        img_winner[rr, cc] = green
         # img[smallest.get('mask')] = np.array([255, 255, 255], dtype=np.uint8)
-        pass
 
     # circulo na cor média da bola e piscando em verde
     # for i in reversed(range(len(balls))):
