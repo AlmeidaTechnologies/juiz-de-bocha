@@ -23,9 +23,7 @@ cfg.SOLVER.IMS_PER_BATCH = 3
 cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = 128
 cfg.SOLVER.BASE_LR = 0.0025
 # cfg.SOLVER.MAX_ITER = 2000  # 614 * 10
-# cfg.SOLVER.STEPS = ()
-cfg.SOLVER.MAX_ITER = 5000
-cfg.SOLVER.STEPS = (614,)
+cfg.SOLVER.MAX_ITER = 1000
 
 cfg.OUTPUT_DIR = './train_custom_dataset/training/'
 os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
