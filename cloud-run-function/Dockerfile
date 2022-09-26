@@ -25,7 +25,11 @@ COPY . ./
 # RUN apt-get -y autoremove
 # RUN apt-get -y autoclean
 
+# workaround apt update not found
+RUN sed -i -r 's/([a-z]{2}.)?archive.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
+RUN sed -i -r 's/security.ubuntu.com/old-releases.ubuntu.com/g' /etc/apt/sources.list
 RUN apt-get update
+
 RUN apt-get install -y build-essential python3.9-dev ffmpeg
 
 RUN python3.9 -m pip install torch==1.10.2+cpu torchvision==0.11.3+cpu -f https://download.pytorch.org/whl/cpu/torch_stable.html
