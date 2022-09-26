@@ -2,7 +2,7 @@ from detectron2.engine import DefaultTrainer
 from detectron2.config import get_cfg
 from detectron2.evaluation import DatasetEvaluators, COCOEvaluator
 import os
-import register_datasets
+from . import register_datasets
 
 register_datasets.juiz_de_bocha_custom()
 
