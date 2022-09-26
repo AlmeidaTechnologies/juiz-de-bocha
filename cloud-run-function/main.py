@@ -54,9 +54,22 @@ def __process_balls(img):
     instances = list(filter(lambda i: i['class'] == 'sports ball', instances))
     balls, smallest, winner = [], None, None
     if len(instances) >= 2:
-        instances.sort(key=lambda i: i['area'])
-        balls = instances[1:]
-        smallest = instances[0]
+        in_walls = []
+        in_middle = []
+        x_min = img.shape[1] * 0.1
+        x_max = img.shape[1] * 0.9
+        y_min = img.shape[0] * 0.1
+        y_max = img.shape[0] * 0.9
+        for instance in instances:
+            in_horizontal_middle = (x_min <= instance['center']['x'] <= x_max)
+            in_vertical_middle = (y_min <= instance['center']['y'] <= y_max)
+            if in_horizontal_middle and in_vertical_middle:
+                in_middle.append(instance)
+            else:
+                in_walls.append(instance)
+        in_middle.sort(key=lambda i: i['area'])
+        smallest = in_middle[0]
+        balls = in_middle[1:] + in_walls
         for i in range(len(balls)):
             balls[i]['distance'] = _two_centers_distance(smallest['center'], balls[i]['center'])
         balls.sort(key=lambda b: b['distance'])
@@ -64,27 +77,26 @@ def __process_balls(img):
     return balls, winner, smallest
 
 
-def __draw_circle(clean_img, img, instance, color, margin=8, stroke=None):
+def __draw_circle(clean_img, img, instance, color, margin=10, stroke=None):
+    if stroke is None:
+        stroke = max(img.shape[0], img.shape[1]) * 0.005
     c = int(instance['center']['x'])
     r = int(instance['center']['y'])
-    c_radius = int(instance['box']['x2'] - instance['box']['x1'])
-    r_radius = int(instance['box']['y2'] - instance['box']['y1'])
-    shape = img.shape
+    c_radius = (instance['box']['x2'] - instance['box']['x1'])/2
+    r_radius = (instance['box']['y2'] - instance['box']['y1'])/2
     # outer
     rr, cc = skimage.draw.ellipse(
         r, c,
-        r_radius - margin,
-        c_radius - margin,
-        shape=shape
+        int(r_radius + margin + stroke),
+        int(c_radius + margin + stroke),
+        shape=img.shape,
     )
     img[rr, cc] = color
     # inner
-    if stroke is None:
-        stroke = max(img.shape[0], img.shape[1]) * 0.007
     rr, cc = skimage.draw.ellipse(
         r, c,
-        r_radius - margin - stroke,
-        c_radius - margin - stroke,
+        int(r_radius + margin),
+        int(c_radius + margin),
         shape=img.shape
     )
     img[rr, cc] = clean_img[rr, cc]
@@ -150,16 +162,16 @@ def _process_image(img_bytes):
 
     # smaller
     if smallest:
-        margin = 0
+        margin = 10
         stroke = max(img.shape[0], img.shape[1]) * 0.0022
         # vertical line
         rr, cc = skimage.draw.rectangle(
             start=(
-                max(int(smallest['box']['y1']-3+margin-stroke), 0),
+                max(int(smallest['box']['y1']-margin), 0),
                 max(int(smallest['center']['x']-stroke/2), 0),
             ),
             end=(
-                min(int(smallest['box']['y2']+3-margin+stroke), img.shape[0]-1),
+                min(int(smallest['box']['y2']+margin), img.shape[0]-1),
                 min(int(smallest['center']['x']+stroke/2), img.shape[1]-1),
             ),
         )
@@ -169,11 +181,11 @@ def _process_image(img_bytes):
         rr, cc = skimage.draw.rectangle(
             start=(
                 max(int(smallest['center']['y']-stroke/2.), 0),
-                max(int(smallest['box']['x1']-3+margin-stroke), 0),
+                max(int(smallest['box']['x1']-margin), 0),
             ),
             end=(
                 min(int(smallest['center']['y']+stroke/2.), img.shape[0]-1),
-                min(int(smallest['box']['x2']+3-margin+stroke), img.shape[1]-1),
+                min(int(smallest['box']['x2']+margin), img.shape[1]-1),
             ),
         )
         img[rr, cc] = green
