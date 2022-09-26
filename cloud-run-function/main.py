@@ -17,8 +17,7 @@ _rec = Recognizer(
     config_file='models/model/config.yaml',
     # weights_file='models/model/weights.pkl',
     weights_file='models/model/model_final.pth',
-    # confidence_threshold=0.9,
-    confidence_threshold=0.95,
+    confidence_threshold=0.9,
 )
 __project = 'juizdebocha'
 __storage_client = storage.Client(project=__project)
@@ -68,13 +67,27 @@ def __process_balls(img):
                 in_middle.append(instance)
             else:
                 in_walls.append(instance)
-        in_middle.sort(key=lambda i: i['area'])
-        smallest = in_middle[0]
-        balls = in_middle[1:] + in_walls
-        for i in range(len(balls)):
-            balls[i]['distance'] = _two_centers_distance(smallest['center'], balls[i]['center'])
-        balls.sort(key=lambda b: b['distance'])
-        winner = balls[0]
+        if len(in_middle) > 0:
+            in_middle.sort(key=lambda i: i['area'])
+            while True:
+                smallest = in_middle[0]
+                if len(in_middle) > 2:
+                    # check if its too small, then, is probably dirt
+                    ratio_larger_to_next = in_middle[-1]['area'] / in_middle[1]['area']
+                    if ratio_larger_to_next > 4:
+                        del smallest
+                        del in_middle[0]
+                    else:
+                        # is viable
+                        break
+                else:
+                    # too few balls to analyse
+                    break
+            balls = in_middle[1:] + in_walls
+            for i in range(len(balls)):
+                balls[i]['distance'] = _two_centers_distance(smallest['center'], balls[i]['center'])
+            balls.sort(key=lambda b: b['distance'])
+            winner = balls[0]
     return balls, winner, smallest
 
 
@@ -163,7 +176,7 @@ def _process_image(img_bytes):
 
     # smaller
     if smallest:
-        margin = 10
+        margin = 0
         stroke = max(img.shape[0], img.shape[1]) * 0.0022
         # vertical line
         rr, cc = skimage.draw.rectangle(
