@@ -56,10 +56,11 @@ def __process_balls(img):
     if len(instances) >= 2:
         in_walls = []
         in_middle = []
-        x_min = img.shape[1] * 0.1
-        x_max = img.shape[1] * 0.9
-        y_min = img.shape[0] * 0.1
-        y_max = img.shape[0] * 0.9
+        margin = 0.05
+        x_min = img.shape[1] * margin
+        x_max = img.shape[1] * (1-margin)
+        y_min = img.shape[0] * margin
+        y_max = img.shape[0] * (1-margin)
         for instance in instances:
             in_horizontal_middle = (x_min <= instance['center']['x'] <= x_max)
             in_vertical_middle = (y_min <= instance['center']['y'] <= y_max)
