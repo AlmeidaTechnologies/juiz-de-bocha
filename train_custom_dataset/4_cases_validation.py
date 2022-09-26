@@ -7,7 +7,7 @@ function = importlib.import_module('cloud-run-function.main')
 function._rec = Recognizer(
     config_file='../models/mask_rcnn_juiz_de_bocha_custom/mask_rcnn_juiz_de_bocha.yaml',
     weights_file='../train_custom_dataset/training/model_final.pth',
-    confidence_threshold=0.7,
+    confidence_threshold=0.95,
     gpu_id=0,
 )
 

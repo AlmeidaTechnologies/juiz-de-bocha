@@ -18,7 +18,7 @@ _rec = Recognizer(
     # weights_file='models/model/weights.pkl',
     weights_file='models/model/model_final.pth',
     # confidence_threshold=0.9,
-    confidence_threshold=0.7,
+    confidence_threshold=0.95,
 )
 __project = 'juizdebocha'
 __storage_client = storage.Client(project=__project)
