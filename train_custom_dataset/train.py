@@ -26,7 +26,7 @@ cfg.MODEL.ROI_HEADS.BATCH_SIZE_PER_IMAGE = (
 )  # faster, and good enough for this toy dataset
 # cfg.MODEL.ROI_HEADS.NUM_CLASSES = 3  # 3 classes (data, fig, hazelnut)
 
-cfg.OUTPUT_DIR = './train/training_custom/'
+cfg.OUTPUT_DIR = './train_custom_dataset/training/'
 os.makedirs(cfg.OUTPUT_DIR, exist_ok=True)
 
 
