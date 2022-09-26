@@ -64,6 +64,32 @@ def __process_balls(img):
     return balls, winner, smallest
 
 
+def __draw_circle(clean_img, img, instance, color, margin=8, stroke=None):
+    c = int(instance['center']['x'])
+    r = int(instance['center']['y'])
+    c_radius = int(instance['box']['x2'] - instance['box']['x1'])
+    r_radius = int(instance['box']['y2'] - instance['box']['y1'])
+    shape = img.shape
+    # outer
+    rr, cc = skimage.draw.ellipse(
+        r, c,
+        r_radius - margin,
+        c_radius - margin,
+        shape=shape
+    )
+    img[rr, cc] = color
+    # inner
+    if stroke is None:
+        stroke = max(img.shape[0], img.shape[1]) * 0.007
+    rr, cc = skimage.draw.ellipse(
+        r, c,
+        r_radius - margin - stroke,
+        c_radius - margin - stroke,
+        shape=img.shape
+    )
+    img[rr, cc] = clean_img[rr, cc]
+
+
 def _process_image(img_bytes):
     img = __read_image(img_bytes)
     balls, winner, smallest = __process_balls(img)
@@ -83,10 +109,6 @@ def _process_image(img_bytes):
     #             y += direction * height
     #         # y = int(smallest['box']['y1'])
     #     # i, j = 0, 0
-    # smaller
-    if smallest:
-        img[smallest.get('mask')] = np.array([255, 255, 255], dtype=np.uint8)
-        # balls filling
     img_winner = img.copy()
     for i, ball in reversed(list(enumerate(balls))):
         colors = img[ball.get('mask')]
@@ -94,31 +116,74 @@ def _process_image(img_bytes):
         img[ball.get('mask')] = avg_color
         if i != 0:
             img_winner[ball.get('mask')] = avg_color
-
+    green = np.array([50, 230, 50], dtype=np.uint8)
     if winner:
-        c = int(winner['center']['x'])
-        r = int(winner['center']['y'])
-        c_radius = int(winner['box']['x2']-winner['box']['x1'])
-        r_radius = int(winner['box']['y2']-winner['box']['y1'])
-        shape = img.shape
-        # outer
+        __draw_circle(
+            img,
+            img_winner,
+            instance=winner,
+            color=green,
+        )
+        # c = int(winner['center']['x'])
+        # r = int(winner['center']['y'])
+        # c_radius = int(winner['box']['x2']-winner['box']['x1'])
+        # r_radius = int(winner['box']['y2']-winner['box']['y1'])
+        # shape = img.shape
+        # # outer
+        # margin = 8
+        # rr, cc = skimage.draw.ellipse(
+        #     r, c,
+        #     r_radius-margin,
+        #     c_radius-margin,
+        #     shape=shape
+        # )
+        # img_winner[rr, cc] = np.array([50, 230, 50], dtype=np.uint8)
+        # # inner
+        # stroke = max(img.shape[0], img.shape[1]) * 0.007
+        # rr, cc = skimage.draw.ellipse(
+        #     r, c,
+        #     r_radius-margin-stroke,
+        #     c_radius-margin-stroke,
+        #     shape=shape
+        # )
+        # img_winner[rr, cc] = img[rr, cc]
+
+    # smaller
+    if smallest:
         margin = 8
-        rr, cc = skimage.draw.ellipse(
-            r, c,
-            r_radius-margin,
-            c_radius-margin,
-            shape=shape
+        stroke = max(img.shape[0], img.shape[1]) * 0.0025
+        __draw_circle(
+            img,
+            img_winner,
+            instance=smallest,
+            color=green,
+            margin=margin,
+            stroke=stroke,
         )
-        img_winner[rr, cc] = np.array([50, 230, 50], dtype=np.uint8)
-        # inner
-        stroke = max(img.shape[0], img.shape[1]) * 0.007
-        rr, cc = skimage.draw.ellipse(
-            r, c,
-            r_radius-margin-stroke,
-            c_radius-margin-stroke,
-            shape=shape
+        __draw_circle(
+            img.copy(),
+            img,
+            instance=smallest,
+            color=green,
+            margin=margin,
+            stroke=stroke,
         )
-        img_winner[rr, cc] = img[rr, cc]
+        # vertical line
+        rr, cc = skimage.draw.rectangle(
+            start=(int(smallest['box']['y1']-1-margin), int(smallest['center']['x']-stroke/2.)),
+            end=(int(smallest['box']['y2']+1+margin), int(smallest['center']['x']+stroke/2.)),
+        )
+        img[rr, cc] = green
+        img_winner[rr, cc] = green
+        # horizontal line
+        rr, cc = skimage.draw.rectangle(
+            start=(int(smallest['center']['y']-stroke/2.), int(smallest['box']['x1']-1-margin)),
+            end=(int(smallest['center']['y']+stroke/2.), int(smallest['box']['x2']+1+margin)),
+        )
+        img[rr, cc] = green
+        img_winner[rr, cc] = green
+        # img[smallest.get('mask')] = np.array([255, 255, 255], dtype=np.uint8)
+        pass
 
     # circulo na cor média da bola e piscando em verde
     # for i in reversed(range(len(balls))):
