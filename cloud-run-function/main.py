@@ -69,21 +69,30 @@ def __process_balls(img):
                 in_walls.append(instance)
         if len(in_middle) > 0:
             in_middle.sort(key=lambda i: i['area'])
+            # get balim
             while True:
                 smallest = in_middle[0]
-                if len(in_middle) > 2:
+                del in_middle[0]
+                if len(in_middle) >= 1:
                     # check if its too small, then, is probably dirt
-                    ratio_larger_to_next = in_middle[-1]['area'] / in_middle[1]['area']
-                    if ratio_larger_to_next > 4:
+                    largest_area = in_middle[-1]['area']
+                    next_area = in_middle[0]['area']
+                    ratio_to_larger = largest_area / smallest['area']
+                    ratio_to_next = next_area / smallest['area']
+                    if ratio_to_larger > 4 and ratio_to_next > 2:
                         del smallest
-                        del in_middle[0]
                     else:
                         # is viable
                         break
                 else:
                     # too few balls to analyse
                     break
-            balls = in_middle[1:] + in_walls
+            # remove walls dirt (smaller than balim)
+            for i in reversed(range(len(in_walls))):
+                ball: dict = in_walls[i]
+                if ball['area'] < smallest['area']/2:
+                    del in_walls[i]
+            balls = in_middle + in_walls
             for i in range(len(balls)):
                 balls[i]['distance'] = _two_centers_distance(smallest['center'], balls[i]['center'])
             balls.sort(key=lambda b: b['distance'])
