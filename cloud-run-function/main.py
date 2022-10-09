@@ -17,7 +17,7 @@ _rec = Recognizer(
     config_file='models/model/config.yaml',
     # weights_file='models/model/weights.pkl',
     weights_file='models/model/model_final.pth',
-    confidence_threshold=0.9,
+    confidence_threshold=0.82,
 )
 __project = 'juizdebocha'
 __storage_client = storage.Client(project=__project)
@@ -52,10 +52,11 @@ def __process_balls(img):
     instances = _rec.predict_data(img)
     instances = list(filter(lambda i: i['class'] == 'sports ball', instances))
     balls, smallest, winner = [], None, None
+    # print("n instances:", len(instances))
     if len(instances) >= 2:
         in_walls = []
         in_middle = []
-        margin = 0.05
+        margin = 0.10
         x_min = img.shape[1] * margin
         x_max = img.shape[1] * (1-margin)
         y_min = img.shape[0] * margin
@@ -79,7 +80,12 @@ def __process_balls(img):
                     next_area = in_middle[0]['area']
                     ratio_to_larger = largest_area / smallest['area']
                     ratio_to_next = next_area / smallest['area']
-                    if ratio_to_larger > 4 and ratio_to_next > 2:
+                    # print("rate difference:")
+                    # print(ratio_to_larger)
+                    # print(ratio_to_next)
+                    # print(ratio_to_larger - ratio_to_next)
+                    # print(math.fabs(ratio_to_larger - ratio_to_next))
+                    if math.fabs(ratio_to_larger - ratio_to_next) > 1.5:
                         del smallest
                     else:
                         # is viable
@@ -93,10 +99,11 @@ def __process_balls(img):
                 if ball['area'] < smallest['area']/2:
                     del in_walls[i]
             balls = in_middle + in_walls
-            for i in range(len(balls)):
-                balls[i]['distance'] = _two_centers_distance(smallest['center'], balls[i]['center'])
-            balls.sort(key=lambda b: b['distance'])
-            winner = balls[0]
+            if len(balls) >= 1:
+                for i in range(len(balls)):
+                    balls[i]['distance'] = _two_centers_distance(smallest['center'], balls[i]['center'])
+                balls.sort(key=lambda b: b['distance'])
+                winner = balls[0]
     return balls, winner, smallest
 
 

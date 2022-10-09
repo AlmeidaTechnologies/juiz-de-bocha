@@ -7,7 +7,7 @@ function = importlib.import_module('cloud-run-function.main')
 function._rec = Recognizer(
     config_file='../models/mask_rcnn_juiz_de_bocha_custom/mask_rcnn_juiz_de_bocha.yaml',
     weights_file='../train_custom_dataset/training/model_final.pth',
-    confidence_threshold=0.9,
+    confidence_threshold=0.82,
     gpu_id=0,
 )
 
@@ -34,7 +34,7 @@ error_cases = {
         # '1656960145.767386.9425.jpg',
         # '1657139008.338589.2250.jpg',
         # '1657136093.914774.9490.jpg',
-        '1657655660.04412.2848.jpg',
+        # '1657655660.04412.2848.jpg',
         # '1657905506.530785.6643.jpg',
         # '1658257544.458747.3460.jpg',
         # '1658258222.471058.3462.jpg',
@@ -55,7 +55,7 @@ error_cases = {
         # '1658921640.855864.4541.jpg',
         # '1658921497.49266.4540.jpg',
         # '1658921444.341192.4539.jpg',
-        '1663270593.932687.2072.jpg',
+        # '1663270593.932687.2072.jpg',
         # '1663353911.24066.930.jpg',
         # '1663355392.043358.7998.jpg',
         # '1663354029.739854.932.jpg',
@@ -69,7 +69,7 @@ error_cases = {
         # '1663616573.410785.479.jpg',
         # '1663869724.345396.5542.jpg',
         # '1663869495.713955.5540.jpg',
-        '1663783226.755644.6090.jpg',
+        # '1663783226.755644.6090.jpg',
         # '1663783138.146048.6089.jpg',
         # '1663782377.503888.6086.jpg',
     ],
@@ -187,9 +187,10 @@ error_cases = {
         # '1662966441.425613.5961.jpg',
         # '1662992968.661219.2536.jpg',
     ],
+
     "leaves": [
-        # '1654093409.927885.746.jpg',
-        # '1654093461.940733.747.jpg',
+        '1654093409.927885.746.jpg',
+        '1654093461.940733.747.jpg',
     ],
     "ball not identified": [
         # '1654976228.170048.4509.jpg',
@@ -202,6 +203,30 @@ error_cases = {
     ],
     "ball not identified/dog": [
         # '1657533873.985111.6603.jpg',
+    ],
+    "before launch": [
+        '../raw-before-launch/1665336714.480092.1844.jpg',
+        '../raw-before-launch/1665336626.984256.1843.jpg',
+        '../raw-before-launch/1665336242.433903.1841.jpg',
+        '../raw-before-launch/1665336143.121804.1840.jpg',
+        '../raw-before-launch/1665335976.929811.1839.jpg',
+        '../raw-before-launch/1665334733.908015.4768.jpg',
+        '../raw-before-launch/1665281157.592272.3519.jpg',
+        '../raw-before-launch/1665281071.441295.3518.jpg',
+        '../raw-before-launch/1665280751.425183.3517.jpg',
+        '../raw-before-launch/1665280594.473304.3516.jpg',
+        '../raw-before-launch/1665280457.878767.3515.jpg',
+        '../raw-before-launch/1665234311.428845.1594.jpg',
+        '../raw-before-launch/1665234200.704884.1593.jpg',
+        '../raw-before-launch/1665234089.449465.1592.jpg',
+        '../raw-before-launch/1665233916.778106.1591.jpg',
+        '../raw-before-launch/1665233766.615633.1590.jpg',
+        '../raw-before-launch/1665233719.464424.1589.jpg',
+        '../raw-before-launch/1665233558.60616.1588.jpg',
+        '../raw-before-launch/1665233039.748426.1587.jpg',
+        '../raw-before-launch/1665232954.540374.1586.jpg',
+        '../raw-before-launch/1665232754.709365.1585.jpg',
+        '../raw-before-launch/1665232339.911072.1584.jpg',
     ],
 }
 
@@ -216,7 +241,7 @@ for case, samples in error_cases.items():
         os.makedirs(output_folder, exist_ok=True)
 
         raw = os.path.join(raw_dir, sample)
-        output = os.path.join(output_folder, sample + '.gif')
+        output = os.path.join(output_folder, sample.split('/')[-1] + '.gif')
         with open(raw, 'rb') as raw_file:
             # process
             result = function._process_image(raw_file.read())
