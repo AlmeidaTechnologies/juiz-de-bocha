@@ -26,6 +26,7 @@ __raw_bucket: storage.Bucket = __storage_client.bucket('juizdebocha-raw')
 __generated_bucket: storage.Bucket = __storage_client.bucket('juizdebocha.appspot.com')
 
 __upload_raw = True
+__thumbnail_size = (300, 300)
 
 
 def _two_centers_distance(ca, cb):
@@ -133,7 +134,7 @@ def __draw_circle(clean_img, img, instance, color, margin=10, stroke=None):
     img[rr, cc] = clean_img[rr, cc]
 
 
-def _process_image(img_bytes):
+def _process_image(img_bytes, create_thumbnail=False):
     img = __read_image(img_bytes)
     balls, winner, smallest = __process_balls(img)
     # grid
@@ -253,6 +254,41 @@ def _process_image(img_bytes):
         # border = dilated ^ eroded
         # border = ndimage.binary_dilation(border, gaussian_kernel(5, 0.5))
         # img[border] = np.array([100, 220, 100], dtype=np.uint8)
+    if create_thumbnail:
+        # resize/reduce based on smaller axis factor of original image
+        axis = int(np.argmin(img_winner.shape[:2]))
+        factor = img_winner.shape[axis] / __thumbnail_size[axis]
+        thumbnail = Image.fromarray(img_winner)
+        thumbnail = thumbnail.resize(
+            size=(
+                int(img_winner.shape[1] / factor),  # width
+                int(img_winner.shape[0] / factor),  # height
+            )
+        )
+        thumbnail = np.array(thumbnail)
+        # cut larger axis to fit target size, with smaler ball in the center
+        cross_axis = (axis+1) % 2
+        center = int(thumbnail.shape[cross_axis] / 2)
+        if smallest is not None:
+            center = int(smallest['center'][('y', 'x')[cross_axis]])
+        center = int(center / factor)
+        size = __thumbnail_size[cross_axis]
+        start = center - int(size / 2)
+        # guarantee that is after image start
+        if start < 0:
+            start = 0
+            end = size
+        else:
+            end = start + size
+            # guarantee that is before image end
+            if end > thumbnail.shape[cross_axis]:
+                end = thumbnail.shape[cross_axis]
+                start = end - size
+        if cross_axis == 0:
+            thumbnail = thumbnail[start:end, :]
+        else:
+            thumbnail = thumbnail[:, start:end]
+        return thumbnail, (img, img_winner)
     return img, img_winner
 
 
@@ -308,19 +344,8 @@ def _to_gif_bytes(images):
     return gif_bytes.getvalue()
 
 
-def _to_bytes(im, format='jpeg', resize_to: tuple = None):
+def _to_bytes(im, format='jpeg'):
     img = Image.fromarray(im)
-    if resize_to is not None:
-        assert len(resize_to) == 2
-        if resize_to[1] is None:
-            width_factor = float(resize_to[0]) / img.width
-            new_height = int(width_factor * img.height)
-            resize_to = (resize_to[0], new_height)
-        if resize_to[0] is None:
-            height_factor = float(resize_to[1]) / img.height
-            new_width = int(height_factor * img.width)
-            resize_to = (new_width, resize_to[1])
-        img = img.resize(resize_to)
     img_bytes = io.BytesIO()
     img.save(img_bytes, format=format)
     return img_bytes.getvalue()
@@ -363,13 +388,16 @@ def process_image_return_image():
             __raw_bucket,
             metadata=request.args,
         )
-    result = _process_image(img_bytes)
+    result = _process_image(img_bytes, create_thumbnail=with_thumbnail)
+    thumbnail = None
+    if with_thumbnail:
+        thumbnail, result = result
+
     gif_bytes = _to_gif_bytes(result)
 
     if with_thumbnail:
-        winner = result[1]
         return dict(
-            thumbnail=base64.encodebytes(_to_bytes(winner, resize_to=(300, None))).decode('utf-8'),
+            thumbnail=base64.encodebytes(_to_bytes(thumbnail)).decode('utf-8'),
             gif=base64.encodebytes(gif_bytes).decode('utf-8'),
         )
     else:
@@ -394,8 +422,11 @@ def process_image_return_url():
             __raw_bucket,
             metadata=request.args,
         )
-    result = _process_image(img_bytes)
-    gif_url = _upload_image(
+    result = _process_image(img_bytes, create_thumbnail=with_thumbnail)
+    thumbnail = None
+    if with_thumbnail:
+        thumbnail, result = result
+    animated_url = _upload_image(
         filename + '.gif',
         _to_gif_bytes(result),
         'gif',
@@ -404,10 +435,9 @@ def process_image_return_url():
         with_public_url=True
     )
     if with_thumbnail:
-        winner = result[1]
         thumbnail_url = _upload_image(
             filename + '.thumbnail.jpg',
-            _to_bytes(winner, resize_to=(300, None)),
+            _to_bytes(thumbnail),
             'jpeg',
             __generated_bucket,
             metadata=request.args,
@@ -415,10 +445,10 @@ def process_image_return_url():
         )
         return dict(
             thumbnail=thumbnail_url,
-            gif=gif_url,
+            animated=animated_url,
         )
     else:
-        return gif_url
+        return animated_url
 
 
 @app.route('/coordinates', methods=['POST'])
