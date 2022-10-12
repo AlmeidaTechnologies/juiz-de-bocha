@@ -11,6 +11,7 @@ test.png
 test-cloudrun/result*.jpg
 test-cloudrun/test*.jpg
 *.gif
+*.jpg
 **/*.gif
 
 gcf-function/detectron2/

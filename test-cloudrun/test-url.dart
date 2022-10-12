@@ -7,7 +7,7 @@ import 'package:collection/collection.dart';
 
 // Camera data: https://pub.dev/documentation/camera/latest/camera/CameraImage-class.html
 
-Future<String> processImage(
+Future<Map<String, dynamic>> processImage(
     Uint8List bytes,
     {
       String? userID,
@@ -27,6 +27,7 @@ Future<String> processImage(
     'lensAperture': lensAperture,
     'sensorSensitivity': sensorSensitivity,
     'sensorExposureTime': sensorExposureTime,
+    'with-thumbnail': 'true',
   });
   http.Request request = http.Request('POST', uri);
   request.headers.addAll({
@@ -34,7 +35,8 @@ Future<String> processImage(
   });
   request.bodyBytes = bytes;
   http.StreamedResponse response = await request.send();
-  return await response.stream.bytesToString();
+  String data = await response.stream.bytesToString();
+  return jsonDecode(data);
 }
 
 void testSingle(
@@ -49,8 +51,8 @@ void testSingle(
     }
 ) async {
   File img = File(filepath ?? 'test.jpg');
-  String url = await processImage(await img.readAsBytes());
-  print(url);
+  Map<String, dynamic> urls = await processImage(await img.readAsBytes());
+  print(urls);
 }
 
 void testSeveral(List<String> args) async {

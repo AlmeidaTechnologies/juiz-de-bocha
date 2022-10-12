@@ -1,3 +1,4 @@
+import base64
 import os
 import random
 from flask import Flask, request, send_file
@@ -307,8 +308,19 @@ def _to_gif_bytes(images):
     return gif_bytes.getvalue()
 
 
-def _to_bytes(im, format='jpeg'):
+def _to_bytes(im, format='jpeg', resize_to: tuple = None):
     img = Image.fromarray(im)
+    if resize_to is not None:
+        assert len(resize_to) == 2
+        if resize_to[1] is None:
+            width_factor = float(resize_to[0]) / img.width
+            new_height = int(width_factor * img.height)
+            resize_to = (resize_to[0], new_height)
+        if resize_to[0] is None:
+            height_factor = float(resize_to[1]) / img.height
+            new_width = int(height_factor * img.width)
+            resize_to = (new_width, resize_to[1])
+        img = img.resize(resize_to)
     img_bytes = io.BytesIO()
     img.save(img_bytes, format=format)
     return img_bytes.getvalue()
@@ -340,6 +352,7 @@ def _upload_image(filepath, img_bytes, img_type, bucket, metadata, with_public_u
 
 @app.route('/image', methods=['POST'])
 def process_image_return_image():
+    with_thumbnail = request.args.get('with-thumbnail') is not None
     img_bytes = request.stream.read()
     filename = _create_filename()
     if __upload_raw:
@@ -351,18 +364,26 @@ def process_image_return_image():
             metadata=request.args,
         )
     result = _process_image(img_bytes)
-    result_bytes = _to_gif_bytes(result)
+    gif_bytes = _to_gif_bytes(result)
 
-    return send_file(
-        io.BytesIO(result_bytes),
-        download_name='response.gif',
-        mimetype='image/gif',
-        as_attachment=True,
-    )
+    if with_thumbnail:
+        winner = result[1]
+        return dict(
+            thumbnail=base64.encodebytes(_to_bytes(winner, resize_to=(300, None))).decode('utf-8'),
+            gif=base64.encodebytes(gif_bytes).decode('utf-8'),
+        )
+    else:
+        return send_file(
+            io.BytesIO(gif_bytes),
+            download_name='response.gif',
+            mimetype='image/gif',
+            as_attachment=True,
+        )
 
 
 @app.route('/url', methods=['POST'])
 def process_image_return_url():
+    with_thumbnail = request.args.get('with-thumbnail') is not None
     img_bytes = request.stream.read()
     filename = _create_filename()
     if __upload_raw:
@@ -373,17 +394,31 @@ def process_image_return_url():
             __raw_bucket,
             metadata=request.args,
         )
-    img = _process_image(img_bytes)
-    url = _upload_image(
+    result = _process_image(img_bytes)
+    gif_url = _upload_image(
         filename + '.gif',
-        _to_gif_bytes(img),
+        _to_gif_bytes(result),
         'gif',
         __generated_bucket,
         metadata=request.args,
         with_public_url=True
     )
-
-    return url
+    if with_thumbnail:
+        winner = result[1]
+        thumbnail_url = _upload_image(
+            filename + '.thumbnail.jpg',
+            _to_bytes(winner, resize_to=(300, None)),
+            'jpeg',
+            __generated_bucket,
+            metadata=request.args,
+            with_public_url=True
+        )
+        return dict(
+            thumbnail=thumbnail_url,
+            gif=gif_url,
+        )
+    else:
+        return gif_url
 
 
 @app.route('/coordinates', methods=['POST'])
